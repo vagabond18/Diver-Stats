@@ -35,7 +35,13 @@ Simply run the script:
 python analyze_stats.py
 ```
 
-1. Read your stats from `assets/26Feb2025.csv`
+or save the results to a file:
+
+```bash
+python analyze_stats.py > output/summary.txt
+```
+
+1. Read your stats from `stats.csv`
 2. Calculate statistics and print a summary
 3. Generate 4 visualization charts in the `output/` directory:
    - `kill_breakdown.png` - Enemy kills by type
@@ -47,32 +53,13 @@ python analyze_stats.py
 
 To analyze a different CSV file, edit `analyze_stats.py`:
 ```python
-csv_file = Path('assets/your_file.csv')
+csv_file = Path('your_file.csv')
 ```
 
 ## Output Example
 
-```
-HELLDIVERS 2 STATISTICS SUMMARY
-============================================================
-
-MISSION STATISTICS
-• Total Missions: 2,723
-• Missions Won: 2,614
-• Success Rate: 96.0%
-• Extraction Rate: 84.1%
-
-COMBAT STATISTICS
-• Total Kills: 307,326
-• K/D Ratio: 40.26
-• Accuracy: 51.8%
-
-AVERAGES PER MISSION
-• XP Earned: 1,153
-• Samples: 17.4
-• Objectives: 5.0
-```
-
+![Comparison](./output/comparison.png)
+---
 ![Mission Stats](./output/mission_stats.png)
 ---
 ![Combat Style](./output/combat_style.png)
