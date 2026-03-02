@@ -1,0 +1,68 @@
+Helldivers 2 Stats Analyzer
+----------------------------------------
+Loading data from stats.csv
+Calculating statistics...
+
+============================================================
+HELLDIVERS 2 STATISTICS SUMMARY
+============================================================
+
+MISSION STATISTICS
+  Total Missions: 3716
+  Missions Won: 3557
+  Success Rate: 95.7%
+  Extraction Rate: 84.2%
+
+COMBAT STATISTICS
+  Total Kills: 479863
+  Terminid: 141911
+  Automaton: 269858
+  Illuminate: 68094
+  K/D Ratio: 411775.4
+  Accuracy: 54.3%
+
+AVERAGES PER MISSION
+  XP Earned: 1283.8
+  Samples: 17.2
+  Objectives: 5.2
+
+============================================================
+
+Creating visualizations...
+[PASSED] Created kill_breakdown.png
+[PASSED] Created combat_style.png
+[PASSED] Created mission_stats.png
+[PASSED] Created stratagem_usage.png
+
+Creating comparison analysis...
+
+======================================================================
+PROGRESS COMPARISON: 26-Feb2025 → 18Feb2026
+======================================================================
+
+MISSIONS PROGRESS
+  New Missions Played: +993 (+36.5%) - Total: 3716
+  New Missions Won: +943 - Total: 3557
+  Success Rate: 96.0% → 95.7% (-0.3%)
+  Extraction Rate: 84.1% → 84.2% (+0.1%)
+  Mission Time: 931 hours 20 minutes → 1290 hours 47 minutes
+  New Time Played: +359 hours 27 minutes (+38.6%)
+
+COMBAT PROGRESS
+  New Kills: +172537 (+56.1%)
+  Terminid: +63279
+  Automaton: +69779
+  Illuminate: +39479
+  New Deaths: +2929 (+38.4%)
+  Accuracy: 51.8% → 54.3% (+2.5%)
+
+COLLECTION PROGRESS
+  New Samples: +16619 (+35.1%) - Total: 63912
+  New XP: +1631554 (+52.0%) - Total: 4770532
+
+======================================================================
+
+[PASSED] Created comparison.png
+[PASSED] Created progress_analysis.png
+
+[PASSED] Done! Charts saved to 'output/' directory

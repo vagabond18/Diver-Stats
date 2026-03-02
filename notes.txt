@@ -1,0 +1,36 @@
+Game release date: 08-02-2024 (DD-MM-YYYY) 
+Purchase Date: 15-04-2024 (DD-MM-YYYY)
+
+Stats collected from:
+15-04-2024 to 26-02-2025 (DD-MM-YYYY)
+then:
+26-02-2025 to 18-02-2026 (DD-MM-YYYY)
+
+Can we use machine learning to analyze this data and predict future performance or trends?
+
+Looking at your current data, you have only 2 data points (Feb 2025 and Feb 2026), which is quite limited for traditional machine learning. However, I can suggest some ML applications depending on what you'd like to achieve:
+
+Possible ML Applications:
+1. With Current Data (2 points):
+
+Simple Linear Regression - Predict future stats based on current trend
+Correlation Analysis - Find relationships between metrics (e.g., does higher accuracy lead to better K/D?)
+Performance Scoring - Create a composite skill score
+2. If You Collect More Data Over Time:
+
+Time Series Forecasting - Predict future performance trends
+Anomaly Detection - Identify unusual gameplay sessions
+Play Style Classification - Cluster different play patterns
+Optimal Strategy Recommendations - Suggest loadouts/tactics based on success patterns
+3. Advanced Analysis:
+
+Feature Importance - Identify which stats most impact mission success
+Efficiency Optimization - Find optimal balance between risk/reward
+What would you like to do?
+Would you like me to:
+
+Add trend prediction (forecast your stats for next year)?
+Create a correlation heatmap (see which stats are related)?
+Build a performance score (single metric combining all stats)?
+Set up for future ML (structure the code to easily add more data points)?
+Let me know which direction interests you, and I can implement it!

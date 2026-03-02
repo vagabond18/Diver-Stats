@@ -42,6 +42,20 @@ def calculate_basic_stats(stats):
     
     return results
 
+def parse_time_to_hours(time_str):
+    """Parse time string (HH:MM:SS) to total hours"""
+    parts = time_str.split(':')
+    hours = int(parts[0])
+    minutes = int(parts[1])
+    seconds = int(parts[2])
+    return hours + minutes / 60 + seconds / 3600
+
+def format_hours_to_readable(hours):
+    """Format hours to readable string (e.g., '359 hours 27 minutes')"""
+    whole_hours = int(hours)
+    minutes = int((hours - whole_hours) * 60)
+    return f"{whole_hours} hours {minutes} minutes"
+
 def calculate_deltas(stats_old, stats_new):
     """Calculate the differences between two time periods"""
     deltas = {}
@@ -130,6 +144,165 @@ def create_comparison_chart(stats_old, stats_new, output_dir=None):
         plt.close()
         print("[PASSED] Created comparison.png")
 
+def create_progress_chart(stats_old, stats_new, calc_old, calc_new, output_dir=None):
+    """Create detailed progress visualization showing improvements"""
+    fig = plt.figure(figsize=(16, 10))
+    gs = fig.add_gridspec(3, 2, hspace=0.3, wspace=0.3)
+    
+    deltas = calculate_deltas(stats_old, stats_new)
+    
+    # 1. Percentage Growth - Main metrics
+    ax1 = fig.add_subplot(gs[0, 0])
+    metrics_pct = {
+        'Missions': (deltas['Missions Played'] / stats_old['Missions Played'] * 100),
+        'Kills': ((deltas['Terminid Kills'] + deltas['Automaton Kills'] + deltas['Illuminate Kills']) / 
+                  (stats_old['Terminid Kills'] + stats_old['Automaton Kills'] + stats_old['Illuminate Kills']) * 100),
+        'Samples': (deltas['Samples Collected'] / stats_old['Samples Collected'] * 100),
+        'XP': (deltas['Total XP Earned'] / stats_old['Total XP Earned'] * 100)
+    }
+    colors_pct = ['#3498DB', '#E74C3C', '#F39C12', '#9B59B6']
+    bars = ax1.bar(metrics_pct.keys(), metrics_pct.values(), color=colors_pct, edgecolor='black', linewidth=1.5)
+    ax1.set_title('Growth Rate (%)', fontweight='bold', fontsize=14)
+    ax1.set_ylabel('Percentage Increase (%)', fontweight='bold')
+    ax1.axhline(y=0, color='black', linestyle='-', linewidth=0.8)
+    for bar in bars:
+        height = bar.get_height()
+        ax1.text(bar.get_x() + bar.get_width()/2., height,
+                f'{height:+.1f}%', ha='center', va='bottom' if height > 0 else 'top', 
+                fontweight='bold', fontsize=10)
+    
+    # 2. Success Rates Comparison
+    ax2 = fig.add_subplot(gs[0, 1])
+    rates = ['Success\nRate', 'Extraction\nRate', 'Accuracy']
+    old_rates = [calc_old['Mission Success Rate'], calc_old['Extraction Rate'], calc_old['Accuracy']]
+    new_rates = [calc_new['Mission Success Rate'], calc_new['Extraction Rate'], calc_new['Accuracy']]
+    
+    x = np.arange(len(rates))
+    width = 0.35
+    bars1 = ax2.bar(x - width/2, old_rates, width, label=stats_old['Date'], color='#95A5A6')
+    bars2 = ax2.bar(x + width/2, new_rates, width, label=stats_new['Date'], color='#2ECC71')
+    
+    ax2.set_title('Performance Rates (%)', fontweight='bold', fontsize=14)
+    ax2.set_ylabel('Percentage', fontweight='bold')
+    ax2.set_xticks(x)
+    ax2.set_xticklabels(rates)
+    ax2.set_ylim(0, 100)
+    ax2.legend()
+    
+    # Add delta labels
+    for i, (old_val, new_val) in enumerate(zip(old_rates, new_rates)):
+        delta = new_val - old_val
+        y_pos = max(old_val, new_val) + 2
+        ax2.text(i, y_pos, f'{delta:+.1f}%', ha='center', fontweight='bold', 
+                fontsize=9, color='green' if delta > 0 else 'red')
+    
+    # 3. Mission Time Comparison
+    ax3 = fig.add_subplot(gs[1, 0])
+    time_old_hours = parse_time_to_hours(stats_old['In Mission Time'])
+    time_new_hours = parse_time_to_hours(stats_new['In Mission Time'])
+    time_delta_hours = time_new_hours - time_old_hours
+    
+    bars = ax3.bar(['2025', '2026'], [time_old_hours, time_new_hours], 
+                   color=['#95A5A6', '#3498DB'], edgecolor='black', linewidth=1.5)
+    ax3.set_title('Total Mission Time', fontweight='bold', fontsize=14)
+    ax3.set_ylabel('Hours', fontweight='bold')
+    
+    for bar, hours in zip(bars, [time_old_hours, time_new_hours]):
+        height = bar.get_height()
+        ax3.text(bar.get_x() + bar.get_width()/2., height,
+                f'{int(hours)}h', ha='center', va='bottom', fontweight='bold')
+    
+    # Add delta annotation
+    ax3.text(0.5, max(time_old_hours, time_new_hours) * 0.5, 
+            f'+{int(time_delta_hours)}h\n({time_delta_hours/time_old_hours*100:+.1f}%)',
+            ha='center', fontweight='bold', fontsize=12, 
+            bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+    
+    # 4. Kill Efficiency (Kills per Hour)
+    ax4 = fig.add_subplot(gs[1, 1])
+    total_kills_old = stats_old['Terminid Kills'] + stats_old['Automaton Kills'] + stats_old['Illuminate Kills']
+    total_kills_new = stats_new['Terminid Kills'] + stats_new['Automaton Kills'] + stats_new['Illuminate Kills']
+    kills_per_hour_old = total_kills_old / time_old_hours if time_old_hours > 0 else 0
+    kills_per_hour_new = total_kills_new / time_new_hours if time_new_hours > 0 else 0
+    
+    bars = ax4.bar(['2025', '2026'], [kills_per_hour_old, kills_per_hour_new],
+                   color=['#95A5A6', '#E74C3C'], edgecolor='black', linewidth=1.5)
+    ax4.set_title('Kills per Hour', fontweight='bold', fontsize=14)
+    ax4.set_ylabel('Kills/Hour', fontweight='bold')
+    
+    for bar, kph in zip(bars, [kills_per_hour_old, kills_per_hour_new]):
+        height = bar.get_height()
+        ax4.text(bar.get_x() + bar.get_width()/2., height,
+                f'{kph:.1f}', ha='center', va='bottom', fontweight='bold')
+    
+    efficiency_change = ((kills_per_hour_new - kills_per_hour_old) / kills_per_hour_old * 100) if kills_per_hour_old > 0 else 0
+    ax4.text(0.5, max(kills_per_hour_old, kills_per_hour_new) * 0.5,
+            f'{efficiency_change:+.1f}%',
+            ha='center', fontweight='bold', fontsize=12,
+            bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+    
+    # 5. Enemy Distribution (Kill percentages)
+    ax5 = fig.add_subplot(gs[2, 0])
+    enemy_types = ['Terminid', 'Automaton', 'Illuminate']
+    old_distro = [stats_old['Terminid Kills']/total_kills_old*100,
+                  stats_old['Automaton Kills']/total_kills_old*100,
+                  stats_old['Illuminate Kills']/total_kills_old*100]
+    new_distro = [stats_new['Terminid Kills']/total_kills_new*100,
+                  stats_new['Automaton Kills']/total_kills_new*100,
+                  stats_new['Illuminate Kills']/total_kills_new*100]
+    
+    x = np.arange(len(enemy_types))
+    width = 0.35
+    bars1 = ax5.bar(x - width/2, old_distro, width, label=stats_old['Date'], color='#95A5A6')
+    bars2 = ax5.bar(x + width/2, new_distro, width, label=stats_new['Date'], color='#FF6B6B')
+    
+    ax5.set_title('Enemy Kill Distribution', fontweight='bold', fontsize=14)
+    ax5.set_ylabel('Percentage of Total Kills (%)', fontweight='bold')
+    ax5.set_xticks(x)
+    ax5.set_xticklabels(enemy_types)
+    ax5.legend()
+    
+    # 6. Resources per Mission
+    ax6 = fig.add_subplot(gs[2, 1])
+    resources = ['Samples/\nMission', 'XP/Mission\n(÷100)', 'Objectives/\nMission']
+    old_resources = [
+        stats_old['Samples Collected'] / stats_old['Missions Played'],
+        stats_old['Total XP Earned'] / stats_old['Missions Played'] / 100,
+        stats_old['Obj Completed'] / stats_old['Missions Played']
+    ]
+    new_resources = [
+        stats_new['Samples Collected'] / stats_new['Missions Played'],
+        stats_new['Total XP Earned'] / stats_new['Missions Played'] / 100,
+        stats_new['Obj Completed'] / stats_new['Missions Played']
+    ]
+    
+    x = np.arange(len(resources))
+    width = 0.35
+    bars1 = ax6.bar(x - width/2, old_resources, width, label=stats_old['Date'], color='#95A5A6')
+    bars2 = ax6.bar(x + width/2, new_resources, width, label=stats_new['Date'], color='#F39C12')
+    
+    ax6.set_title('Average Resources per Mission', fontweight='bold', fontsize=14)
+    ax6.set_ylabel('Count', fontweight='bold')
+    ax6.set_xticks(x)
+    ax6.set_xticklabels(resources)
+    ax6.legend()
+    
+    # Add percentage change labels
+    for i, (old_val, new_val) in enumerate(zip(old_resources, new_resources)):
+        if old_val > 0:
+            pct_change = ((new_val - old_val) / old_val * 100)
+            y_pos = max(old_val, new_val) + 0.5
+            ax6.text(i, y_pos, f'{pct_change:+.1f}%', ha='center', 
+                    fontweight='bold', fontsize=9, color='green' if pct_change > 0 else 'red')
+    
+    plt.suptitle(f'Progress Analysis: {stats_old["Date"]} → {stats_new["Date"]}', 
+                 fontsize=18, fontweight='bold', y=0.995)
+    
+    if output_dir:
+        plt.savefig(output_dir / 'progress_analysis.png', dpi=150, bbox_inches='tight')
+        plt.close()
+        print("[PASSED] Created progress_analysis.png")
+
 def print_comparison_summary(stats_old, stats_new, calc_old, calc_new):
     """Print comparison summary between two time periods"""
     deltas = calculate_deltas(stats_old, stats_new)
@@ -148,6 +321,14 @@ def print_comparison_summary(stats_old, stats_new, calc_old, calc_new):
     print(f"  Success Rate: {calc_old['Mission Success Rate']:.1f}% → {calc_new['Mission Success Rate']:.1f}% ({success_rate_change:+.1f}%)")
     extraction_rate_change = calc_new['Extraction Rate'] - calc_old['Extraction Rate']
     print(f"  Extraction Rate: {calc_old['Extraction Rate']:.1f}% → {calc_new['Extraction Rate']:.1f}% ({extraction_rate_change:+.1f}%)")
+    
+    # mission time comparison
+    time_old_hours = parse_time_to_hours(stats_old['In Mission Time'])
+    time_new_hours = parse_time_to_hours(stats_new['In Mission Time'])
+    time_delta_hours = time_new_hours - time_old_hours
+    time_pct = (time_delta_hours / time_old_hours * 100) if time_old_hours > 0 else 0
+    print(f"  Mission Time: {format_hours_to_readable(time_old_hours)} → {format_hours_to_readable(time_new_hours)}")
+    print(f"  New Time Played: +{format_hours_to_readable(time_delta_hours)} ({time_pct:+.1f}%)")
     
     print("\nCOMBAT PROGRESS")
     total_kills_delta = deltas['Terminid Kills'] + deltas['Automaton Kills'] + deltas['Illuminate Kills']
@@ -394,6 +575,7 @@ def main():
         
         print_comparison_summary(stats_old, stats_new, calculated_stats_old, calculated_stats_new)
         create_comparison_chart(stats_old, stats_new, output_dir)
+        create_progress_chart(stats_old, stats_new, calculated_stats_old, calculated_stats_new, output_dir)
     
     print(f"\n[PASSED] Done! Charts saved to '{output_dir}/' directory")
 
